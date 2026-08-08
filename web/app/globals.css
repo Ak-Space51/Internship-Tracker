@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Job description HTML (sanitized ATS content) */
+.prose-job h1,
+.prose-job h2,
+.prose-job h3,
+.prose-job h4 {
+  font-weight: 600;
+  color: var(--color-zinc-900);
+  margin: 1.25em 0 0.5em;
+}
+.prose-job p {
+  margin: 0.6em 0;
+}
+.prose-job ul,
+.prose-job ol {
+  margin: 0.6em 0;
+  padding-left: 1.4em;
+}
+.prose-job ul {
+  list-style: disc;
+}
+.prose-job ol {
+  list-style: decimal;
+}
+.prose-job li {
+  margin: 0.25em 0;
+}
+.prose-job a {
+  color: var(--color-indigo-600);
+  text-decoration: underline;
+}
+.prose-job b,
+.prose-job strong {
+  font-weight: 600;
+  color: var(--color-zinc-900);
+}

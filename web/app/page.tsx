@@ -1,0 +1,126 @@
+import Link from "next/link";
+import CompanyGroup from "@/components/CompanyGroup";
+import FilterSidebar from "@/components/FilterSidebar";
+import { getFacets, getGroupedJobs, getTargetSeason, PAGE_SIZE } from "@/lib/db";
+import {
+  parseFilters,
+  pageHref,
+  prettySeason,
+  type SearchParams,
+} from "@/lib/filters";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const sp = await searchParams;
+  const targetSeason = await getTargetSeason();
+  const filters = parseFilters(sp, targetSeason);
+  const [{ groups, totalJobs, totalCompanies }, facets] = await Promise.all([
+    getGroupedJobs(filters, targetSeason),
+    getFacets(filters),
+  ]);
+  const pages = Math.max(1, Math.ceil(totalCompanies / PAGE_SIZE));
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-6">
+      <div className="mb-6">
+        <form action="/" method="get" className="flex gap-2">
+          <input
+            type="search"
+            name="q"
+            defaultValue={filters.q ?? ""}
+            placeholder="Search internships, companies, cities…"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          />
+          <button
+            type="submit"
+            className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            Search
+          </button>
+        </form>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-[220px_1fr]">
+        <FilterSidebar filters={filters} facets={facets} />
+
+        <main>
+          <div className="mb-3 flex items-baseline justify-between">
+            <p className="text-sm text-zinc-600">
+              <span className="font-semibold text-zinc-900">{totalJobs}</span>{" "}
+              internship{totalJobs === 1 ? "" : "s"} at{" "}
+              <span className="font-semibold text-zinc-900">{totalCompanies}</span>{" "}
+              compan{totalCompanies === 1 ? "y" : "ies"}
+              {filters.q && (
+                <>
+                  {" "}
+                  matching “<span className="font-medium">{filters.q}</span>”
+                </>
+              )}
+            </p>
+            {(filters.q ||
+              filters.roles.length > 0 ||
+              filters.companies.length > 0) && (
+              <Link href="/" className="text-sm text-indigo-600 hover:underline">
+                Clear filters
+              </Link>
+            )}
+          </div>
+
+          {groups.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500">
+              No internships match these filters. Try widening the season or
+              location selection.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {groups.map((group) => (
+                <CompanyGroup
+                  key={group.company_slug}
+                  group={group}
+                  targetSeason={targetSeason}
+                />
+              ))}
+            </div>
+          )}
+
+          {pages > 1 && (
+            <nav className="mt-6 flex items-center justify-center gap-2 text-sm">
+              {filters.page > 1 && (
+                <Link
+                  href={pageHref(sp, filters.page - 1)}
+                  className="rounded border border-zinc-300 px-3 py-1.5 hover:bg-zinc-100"
+                >
+                  ← Prev
+                </Link>
+              )}
+              <span className="px-2 text-zinc-500">
+                Page {filters.page} of {pages}
+              </span>
+              {filters.page < pages && (
+                <Link
+                  href={pageHref(sp, filters.page + 1)}
+                  className="rounded border border-zinc-300 px-3 py-1.5 hover:bg-zinc-100"
+                >
+                  Next →
+                </Link>
+              )}
+            </nav>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export async function generateMetadata() {
+  const targetSeason = await getTargetSeason();
+  return {
+    title: `TrackInternships — ${prettySeason(targetSeason)} internships`,
+    description: `Every open ${prettySeason(targetSeason)} internship in India, Singapore, UK and Hong Kong, from 50+ company career boards.`,
+  };
+}
