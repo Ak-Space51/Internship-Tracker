@@ -34,13 +34,23 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="text-lg font-bold tracking-tight">
               Track<span className="text-indigo-600">Internships</span>
             </Link>
-            <p className="text-sm text-zinc-500">
-              Tracking{" "}
-              <span className="font-semibold text-indigo-600">
-                {prettySeason(targetSeason)}
-              </span>{" "}
-              internships · India · Singapore · UK · Hong Kong
-            </p>
+            <div className="flex items-center gap-5">
+              <p className="hidden text-sm text-zinc-500 sm:block">
+                Tracking{" "}
+                <span className="font-semibold text-indigo-600">
+                  {prettySeason(targetSeason)}
+                </span>{" "}
+                internships · India · Singapore · UK · Hong Kong
+              </p>
+              <nav className="flex items-center gap-4 text-sm font-medium text-zinc-600">
+                <Link href="/saved" className="hover:text-indigo-600">
+                  ★ Saved
+                </Link>
+                <Link href="/alerts" className="hover:text-indigo-600">
+                  🔔 Alerts
+                </Link>
+              </nav>
+            </div>
           </div>
         </header>
         <div className="flex-1">{children}</div>

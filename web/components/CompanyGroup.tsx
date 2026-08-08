@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SaveButton from "@/components/SaveButton";
 import type { CompanyGroup as Group, JobRow } from "@/lib/db";
 import { formatComp, jobComp } from "@/lib/comp";
 import { isNew, prettySeason, timeAgo } from "@/lib/filters";
@@ -86,14 +87,17 @@ function Row({ job, targetSeason }: { job: JobRow; targetSeason: string }) {
           </span>
         </span>
       </div>
-      <a
-        href={job.application_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="relative z-10 shrink-0 rounded-md border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
-      >
-        Apply ↗
-      </a>
+      <span className="flex shrink-0 items-center gap-1.5">
+        <a
+          href={job.application_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative z-10 rounded-md border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+        >
+          Apply ↗
+        </a>
+        <SaveButton jobId={job.id} />
+      </span>
     </li>
   );
 }

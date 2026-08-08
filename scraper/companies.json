@@ -51,6 +51,7 @@
   {"name": "Adobe", "slug": "adobe", "ats": "workday", "ats_token": "adobe@wd5@external_experienced", "website": "https://adobe.com"},
   {"name": "PayPal", "slug": "paypal", "ats": "workday", "ats_token": "paypal@wd1@jobs", "website": "https://paypal.com"},
   {"name": "Salesforce", "slug": "salesforce", "ats": "workday", "ats_token": "salesforce@wd12@External_Career_Site", "website": "https://salesforce.com"},
+  {"name": "Amazon", "slug": "amazon", "ats": "amazon", "ats_token": "IND,SGP,GBR,HKG", "website": "https://amazon.jobs"},
   {"name": "Palantir", "slug": "palantir", "ats": "lever", "ats_token": "palantir", "website": "https://palantir.com"},
   {"name": "Animoca Brands", "slug": "animoca", "ats": "lever", "ats_token": "animocabrands", "website": "https://animocabrands.com"},
   {"name": "OpenAI", "slug": "openai", "ats": "ashby", "ats_token": "openai", "website": "https://openai.com"},

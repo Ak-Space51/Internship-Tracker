@@ -5,11 +5,13 @@ An internship aggregation platform targeting the **nearest upcoming internship s
 Data flows one way: ATS APIs → Python ingestion pipeline → PostgreSQL → Next.js. The browser never talks to company APIs; Postgres is the single source of truth.
 
 ```
-scraper (Python)          database              web (Next.js 16)
+scraper (Python)             database              web (Next.js 16)
 Greenhouse ┐
-Ashby      ├─ fetch → normalize → upsert → Postgres → filters/search UI
-Lever      │   (intern? season? location?         (grouped by company)
-Workday    ┘    role? stipend?)
+Ashby      │                                    ┌ filters/search (grouped by company)
+Lever      ├─ fetch → normalize → upsert → Postgres ┤ saved jobs (localStorage)
+Workday    │   (intern? season? location?       └ alert subscriptions
+Amazon     ┘    role? stipend?)   ↑↓
+                        LLM fallback (classify) + email digests (alerts)
 ```
 
 ## Layout
@@ -80,6 +82,22 @@ Add an entry to `scraper/companies.json`:
 Token = the board identifier in the ATS URL (`boards.greenhouse.io/<token>`, `jobs.ashbyhq.com/<token>`, `jobs.lever.co/<token>`). For Workday the token is `tenant@host@site`, taken from the career page URL `https://<tenant>.<host>.myworkdayjobs.com/<site>` (e.g. `nvidia@wd5@NVIDIAExternalCareerSite`). Verify it resolves:
 `uv run scraper ingest --company acme`.
 
+## LLM classification fallback
+
+`uv run scraper classify` sends jobs the rules couldn't place (season unknown or role "Other") to Claude (`claude-opus-5`) in batches, filling only the missing fields — explicit rule-derived values are never overwritten, and each job is billed at most once (`jobs.llm_checked`). Requires `ANTHROPIC_API_KEY` (or `ant auth login`); without credentials it exits with instructions.
+
+## Alerts
+
+Subscribe at `/alerts` (per-email filters for location/role/keywords). `uv run scraper alerts` finds active matching jobs not yet delivered to each subscriber and emails a digest via [Resend](https://resend.com) when `RESEND_API_KEY` is set — without it, digests print to stdout as a dry run and nothing is marked delivered. `alert_deliveries` guarantees a job is emailed at most once per subscriber. Set `ALERTS_FROM` and `SITE_URL` for production.
+
+## Deployment
+
+The repo is push-ready for the standard free-tier stack:
+
+1. **Supabase** (database): create a project, then point `DATABASE_URL` at its Postgres connection string and run `uv run scraper migrate` once.
+2. **Vercel** (web): import the repo, set the root directory to `web/`, add the `DATABASE_URL` env var.
+3. **GitHub Actions** (scheduled ingest): [.github/workflows/ingest.yml](.github/workflows/ingest.yml) runs migrate → ingest → classify → alerts every 6 hours. Add repository secrets `DATABASE_URL`, and optionally `ANTHROPIC_API_KEY` (classification) and `RESEND_API_KEY` (email delivery), plus a `SITE_URL` repository variable.
+
 ## Tests
 
 ```bash
@@ -87,6 +105,6 @@ cd scraper && uv run pytest      # normalizer suite: seasons, locations, roles, 
 cd web && npx next build         # typecheck + build
 ```
 
-## Deferred (V2+)
+## Deferred (V3+)
 
-Supabase deployment, accounts/saved jobs, email alerts, LLM classification fallback for ambiguous titles, Playwright scrapers for non-ATS companies, Workday/SmartRecruiters support.
+Full accounts (saved jobs are currently per-browser via localStorage), application-status tracking (applied/interview/offer), bespoke scrapers for Microsoft/Goldman/DE Shaw/Flipkart-style portals (their JSON APIs need browser-side discovery), SmartRecruiters/iCIMS support, alert unsubscribe links + email confirmation.

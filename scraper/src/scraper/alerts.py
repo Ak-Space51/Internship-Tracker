@@ -1,0 +1,114 @@
+"""Email alerts: match new jobs against subscriptions and send digests.
+
+Run `scraper alerts` after each ingest (same cron). Delivery goes through
+Resend when RESEND_API_KEY is set; otherwise the digest is printed to stdout
+as a dry run and nothing is recorded, so the first real send still covers
+those jobs.
+"""
+
+from __future__ import annotations
+
+import os
+
+import httpx
+
+TARGET_COUNTRIES = ["India", "Singapore", "United Kingdom", "Hong Kong", "Remote"]
+FROM_ADDRESS = os.environ.get("ALERTS_FROM", "TrackInternships <alerts@resend.dev>")
+SITE_URL = os.environ.get("SITE_URL", "http://localhost:3000")
+
+
+def _matches(conn, sub, target_season: str) -> list[tuple]:
+    seasons = list(sub["seasons"]) or [target_season, "off-cycle"]
+    countries = list(sub["countries"]) or TARGET_COUNTRIES
+    params: dict = {
+        "sub_id": sub["id"],
+        "seasons": seasons,
+        "countries": countries,
+    }
+    clauses = ""
+    if sub["roles"]:
+        clauses += " AND j.role_category = ANY(%(roles)s)"
+        params["roles"] = list(sub["roles"])
+    if sub["keywords"]:
+        clauses += " AND j.title ILIKE ANY(%(keywords)s)"
+        params["keywords"] = [f"%{k}%" for k in sub["keywords"]]
+
+    return conn.execute(
+        f"""
+        SELECT j.id, j.title, c.name, j.country, j.city, j.season, j.application_url
+        FROM jobs j JOIN companies c ON c.id = j.company_id
+        WHERE j.is_active
+          AND j.season = ANY(%(seasons)s)
+          AND j.country = ANY(%(countries)s)
+          {clauses}
+          AND NOT EXISTS (
+              SELECT 1 FROM alert_deliveries d
+              WHERE d.subscription_id = %(sub_id)s AND d.job_id = j.id
+          )
+        ORDER BY coalesce(j.posted_at, j.first_seen_at) DESC
+        LIMIT 50
+        """,
+        params,
+    ).fetchall()
+
+
+def _digest_html(jobs: list[tuple], target_season: str) -> str:
+    items = "".join(
+        f'<li style="margin-bottom:12px">'
+        f'<a href="{url}"><strong>{title}</strong></a><br>'
+        f"{company} · {city + ', ' if city and city != country else ''}{country} · {season}"
+        f"</li>"
+        for _, title, company, country, city, season, url in jobs
+    )
+    return (
+        f"<h2>{len(jobs)} new internship{'s' if len(jobs) != 1 else ''} matching your alert</h2>"
+        f"<ul style='list-style:none;padding:0'>{items}</ul>"
+        f"<p><a href='{SITE_URL}'>Browse all internships</a></p>"
+    )
+
+
+def _send(client: httpx.Client, api_key: str, to: str, subject: str, html: str) -> None:
+    resp = client.post(
+        "https://api.resend.com/emails",
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={"from": FROM_ADDRESS, "to": [to], "subject": subject, "html": html},
+    )
+    resp.raise_for_status()
+
+
+def run_alerts(conn) -> tuple[int, int]:
+    """Returns (subscriptions processed, emails sent or printed)."""
+    api_key = os.environ.get("RESEND_API_KEY")
+    target_season = conn.execute(
+        "SELECT value FROM settings WHERE key = 'target_season'"
+    ).fetchone()[0]
+
+    subs = conn.execute(
+        "SELECT id, email, seasons, countries, roles, keywords FROM alert_subscriptions"
+    ).fetchall()
+    sent = 0
+    with httpx.Client(timeout=30) as client:
+        for row in subs:
+            sub = dict(
+                zip(["id", "email", "seasons", "countries", "roles", "keywords"], row)
+            )
+            jobs = _matches(conn, sub, target_season)
+            if not jobs:
+                continue
+            subject = f"{len(jobs)} new internship{'s' if len(jobs) != 1 else ''} for you"
+            html = _digest_html(jobs, target_season)
+            if api_key:
+                _send(client, api_key, sub["email"], subject, html)
+                conn.executemany(
+                    "INSERT INTO alert_deliveries (subscription_id, job_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                    [(sub["id"], j[0]) for j in jobs],
+                )
+                conn.commit()
+            else:
+                print(f"[dry run — RESEND_API_KEY unset] would email {sub['email']}:")
+                for _, title, company, *_ in jobs[:10]:
+                    print(f"    {title} — {company}")
+                if len(jobs) > 10:
+                    print(f"    … and {len(jobs) - 10} more")
+            sent += 1
+    return len(subs), sent
