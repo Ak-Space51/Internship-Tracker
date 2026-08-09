@@ -16,7 +16,9 @@ export const pool =
     ssl: connectionString.includes("supabase")
       ? { rejectUnauthorized: false }
       : undefined,
-    max: 10,
+    // Serverless: every function instance gets its own pool, so keep it small.
+    // Use Supabase's transaction-mode pooler (port 6543) in production.
+    max: connectionString.includes("supabase") ? 3 : 10,
   });
 globalThis._pgPool = pool;
 
