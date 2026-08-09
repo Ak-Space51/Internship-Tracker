@@ -43,7 +43,10 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           SITE_URL: ${{ vars.SITE_URL }}
+          ALERTS_FROM: ${{ vars.ALERTS_FROM }}
         run: uv run scraper alerts
 
       - name: Stats
+        # Report counts even if digest delivery failed above
+        if: ${{ !cancelled() }}
         run: uv run scraper stats

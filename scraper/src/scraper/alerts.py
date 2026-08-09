@@ -13,8 +13,9 @@ import os
 import httpx
 
 TARGET_COUNTRIES = ["India", "Singapore", "United Kingdom", "Hong Kong", "Remote"]
-FROM_ADDRESS = os.environ.get("ALERTS_FROM", "TrackInternships <alerts@resend.dev>")
-SITE_URL = os.environ.get("SITE_URL", "http://localhost:3000")
+# `or` fallback: in GitHub Actions an unset var/secret expands to "" rather than unset
+FROM_ADDRESS = os.environ.get("ALERTS_FROM") or "TrackInternships <alerts@resend.dev>"
+SITE_URL = os.environ.get("SITE_URL") or "http://localhost:3000"
 
 
 def _matches(conn, sub, target_season: str) -> list[tuple]:
@@ -73,11 +74,13 @@ def _send(client: httpx.Client, api_key: str, to: str, subject: str, html: str) 
         headers={"Authorization": f"Bearer {api_key}"},
         json={"from": FROM_ADDRESS, "to": [to], "subject": subject, "html": html},
     )
-    resp.raise_for_status()
+    if resp.is_error:
+        # Surface Resend's error body — raise_for_status alone hides the reason
+        raise RuntimeError(f"Resend returned {resp.status_code}: {resp.text}")
 
 
-def run_alerts(conn) -> tuple[int, int]:
-    """Returns (subscriptions processed, emails sent or printed)."""
+def run_alerts(conn) -> tuple[int, int, int]:
+    """Returns (subscriptions processed, emails sent or printed, send failures)."""
     api_key = os.environ.get("RESEND_API_KEY")
     target_season = conn.execute(
         "SELECT value FROM settings WHERE key = 'target_season'"
@@ -87,6 +90,7 @@ def run_alerts(conn) -> tuple[int, int]:
         "SELECT id, email, seasons, countries, roles, keywords FROM alert_subscriptions"
     ).fetchall()
     sent = 0
+    failed = 0
     with httpx.Client(timeout=30) as client:
         for row in subs:
             sub = dict(
@@ -98,7 +102,13 @@ def run_alerts(conn) -> tuple[int, int]:
             subject = f"{len(jobs)} new internship{'s' if len(jobs) != 1 else ''} for you"
             html = _digest_html(jobs, target_season)
             if api_key:
-                _send(client, api_key, sub["email"], subject, html)
+                try:
+                    _send(client, api_key, sub["email"], subject, html)
+                except (RuntimeError, httpx.HTTPError) as exc:
+                    # Skip delivery recording so these jobs are retried next run
+                    print(f"FAILED to email {sub['email']}: {exc}")
+                    failed += 1
+                    continue
                 conn.executemany(
                     "INSERT INTO alert_deliveries (subscription_id, job_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                     [(sub["id"], j[0]) for j in jobs],
@@ -111,4 +121,4 @@ def run_alerts(conn) -> tuple[int, int]:
                 if len(jobs) > 10:
                     print(f"    … and {len(jobs) - 10} more")
             sent += 1
-    return len(subs), sent
+    return len(subs), sent, failed

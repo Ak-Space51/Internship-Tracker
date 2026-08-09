@@ -53,11 +53,18 @@ def cmd_migrate(_: argparse.Namespace) -> None:
 
 
 def cmd_alerts(_: argparse.Namespace) -> None:
+    import os
+    import sys
+
     from scraper.alerts import run_alerts
 
     with db.connect() as conn:
-        subs, sent = run_alerts(conn)
-    print(f"{subs} subscriptions, {sent} digests {'sent' if 'RESEND_API_KEY' in __import__('os').environ else 'printed (dry run)'}")
+        subs, sent, failed = run_alerts(conn)
+    # In Actions an unset secret expands to "", so check the value, not the key
+    mode = "sent" if os.environ.get("RESEND_API_KEY") else "printed (dry run)"
+    print(f"{subs} subscriptions, {sent} digests {mode}, {failed} failed")
+    if failed:
+        sys.exit(1)
 
 
 def cmd_stats(_: argparse.Namespace) -> None:
