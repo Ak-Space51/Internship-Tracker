@@ -109,10 +109,12 @@ def run_alerts(conn) -> tuple[int, int, int]:
                     print(f"FAILED to email {sub['email']}: {exc}")
                     failed += 1
                     continue
-                conn.executemany(
-                    "INSERT INTO alert_deliveries (subscription_id, job_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    [(sub["id"], j[0]) for j in jobs],
-                )
+                # psycopg3 only exposes executemany on cursors, not the connection
+                with conn.cursor() as cur:
+                    cur.executemany(
+                        "INSERT INTO alert_deliveries (subscription_id, job_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+                        [(sub["id"], j[0]) for j in jobs],
+                    )
                 conn.commit()
             else:
                 print(f"[dry run — RESEND_API_KEY unset] would email {sub['email']}:")
