@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { Pool } from "pg";
 
 declare global {
@@ -69,10 +70,15 @@ export type FacetCount = { value: string; count: number };
 
 const PAGE_SIZE = 20; // companies per page (grouped view)
 
+/** Ingest runs every 6 hours, so serving reads a few minutes stale costs
+ * nothing and takes the whole listing off the database on every page view. */
+const REVALIDATE_SECONDS = 300;
+const JOBS_TAG = "jobs";
+
 /** When the scraper last touched a job. Every ingest stamps last_seen_at on
  * every job it sees, so this doubles as a pipeline-health signal: if it stops
  * advancing, the scheduled ingest has stalled. */
-export async function getLastIngestAt(): Promise<string | null> {
+async function queryLastIngestAt(): Promise<string | null> {
   try {
     const { rows } = await pool.query(
       "SELECT max(last_seen_at) AS at FROM jobs WHERE is_active"
@@ -83,10 +89,15 @@ export async function getLastIngestAt(): Promise<string | null> {
   }
 }
 
+export const getLastIngestAt = unstable_cache(queryLastIngestAt, ["last-ingest-at"], {
+  revalidate: REVALIDATE_SECONDS,
+  tags: [JOBS_TAG],
+});
+
 /** Falls back rather than throwing: the root layout awaits this, so a database
  * blip during prerender would otherwise fail the whole build and leave the
  * previous deployment live. */
-export async function getTargetSeason(): Promise<string> {
+async function queryTargetSeason(): Promise<string> {
   try {
     const { rows } = await pool.query(
       "SELECT value FROM settings WHERE key = 'target_season'"
@@ -96,6 +107,13 @@ export async function getTargetSeason(): Promise<string> {
     return "summer-2027";
   }
 }
+
+/** Read three times per request (layout, page, generateMetadata) for a value
+ * that turns over once a year, so it gets a much longer window. */
+export const getTargetSeason = unstable_cache(queryTargetSeason, ["target-season"], {
+  revalidate: 3600,
+  tags: [JOBS_TAG],
+});
 
 function buildWhere(
   f: Filters,
@@ -135,7 +153,7 @@ const JOB_COLUMNS = `j.id, j.title, c.name AS company_name, c.slug AS company_sl
 /** Jobs grouped by company. Pagination is by company: a company appears with
  * all of its matching roles on one page. Companies are ordered by whether they
  * have a target-season role, then by their most recent posting. */
-export async function getGroupedJobs(
+async function queryGroupedJobs(
   f: Filters,
   targetSeason: string
 ): Promise<{ groups: CompanyGroup[]; totalJobs: number; totalCompanies: number }> {
@@ -192,7 +210,7 @@ export async function getGroupedJobs(
   };
 }
 
-export async function getFacets(
+async function queryFacets(
   f: Filters
 ): Promise<Record<"seasons" | "countries" | "roles" | "companies", FacetCount[]>> {
   const facet = async (
@@ -217,6 +235,32 @@ export async function getFacets(
     facet("companies", "c.slug || '|' || c.name"),
   ]);
   return { seasons, countries, roles, companies };
+}
+
+const cachedGroupedJobs = unstable_cache(queryGroupedJobs, ["grouped-jobs"], {
+  revalidate: REVALIDATE_SECONDS,
+  tags: [JOBS_TAG],
+});
+
+const cachedFacets = unstable_cache(queryFacets, ["facets"], {
+  revalidate: REVALIDATE_SECONDS,
+  tags: [JOBS_TAG],
+});
+
+/** Free-text search goes straight to the database. Facet combinations are a
+ * bounded set worth caching; arbitrary search strings are not, since every
+ * distinct query would earn its own cache entry. */
+export function getGroupedJobs(
+  f: Filters,
+  targetSeason: string
+): Promise<{ groups: CompanyGroup[]; totalJobs: number; totalCompanies: number }> {
+  return f.q ? queryGroupedJobs(f, targetSeason) : cachedGroupedJobs(f, targetSeason);
+}
+
+export function getFacets(
+  f: Filters
+): Promise<Record<"seasons" | "countries" | "roles" | "companies", FacetCount[]>> {
+  return f.q ? queryFacets(f) : cachedFacets(f);
 }
 
 export async function getJob(id: number): Promise<JobDetail | null> {
