@@ -95,15 +95,22 @@ Subscribe at `/alerts` (per-email filters for location/role/keywords). `uv run s
 The repo is push-ready for the standard free-tier stack:
 
 1. **Supabase** (database): create a project, then point `DATABASE_URL` at its Postgres connection string and run `uv run scraper migrate` once.
-2. **Vercel** (web): import the repo, set the root directory to `web/`, add the `DATABASE_URL` env var.
+2. **Vercel** (web): import the repo, set the root directory to `web/`, add the `DATABASE_URL` env var. Keep the function region in [web/vercel.json](web/vercel.json) matching your Supabase region — a page render issues several queries, so distance to the database is multiplied.
 3. **GitHub Actions** (scheduled ingest): [.github/workflows/ingest.yml](.github/workflows/ingest.yml) runs migrate → ingest → classify → alerts every 6 hours. Add repository secrets `DATABASE_URL`, and optionally `ANTHROPIC_API_KEY` (classification) and `RESEND_API_KEY` (email delivery), plus a `SITE_URL` repository variable.
 
 ## Tests
 
 ```bash
 cd scraper && uv run pytest      # normalizer suite: seasons, locations, roles, intern filter
+cd web && npm test               # collapse behaviour (jsdom)
 cd web && npx next build         # typecheck + build
 ```
+
+## Monitoring
+
+[infra/](infra/README.md) holds Terraform for an hourly CloudWatch check that emails you when
+ingestion stalls. `/api/health` exposes the same signal (ingest age, active job
+count, database latency) for ad-hoc checks.
 
 ## Deferred (V3+)
 
