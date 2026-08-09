@@ -71,7 +71,7 @@ export default async function Home({
                   Clear filters
                 </Link>
               )}
-              <CollapseControls />
+              <CollapseControls slugs={groups.map((g) => g.company_slug)} />
             </span>
           </div>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CompanyCard from "@/components/CompanyCard";
 import SaveButton from "@/components/SaveButton";
 import type { CompanyGroup as Group, JobRow } from "@/lib/db";
 import { formatComp, jobComp } from "@/lib/comp";
@@ -113,27 +114,13 @@ export default function CompanyGroup({
   const hidden = group.jobs.slice(VISIBLE_ROWS);
   const seasonCount = group.jobs.filter((j) => j.season === targetSeason).length;
   return (
-    <details
-      open
-      data-company={group.company_slug}
-      className="group/co overflow-hidden rounded-lg border border-zinc-200 bg-white"
+    <CompanyCard
+      slug={group.company_slug}
+      name={group.company_name}
+      roleCount={group.jobs.length}
+      seasonCount={seasonCount}
+      seasonLabel={prettySeason(targetSeason)}
     >
-      <summary className="flex cursor-pointer list-none items-baseline justify-between border-b border-zinc-100 bg-zinc-50/60 px-4 py-2 hover:bg-zinc-100/70">
-        <h2 className="flex items-baseline gap-2 text-sm font-semibold text-zinc-900">
-          <span className="text-zinc-400 transition-transform group-open/co:rotate-90">
-            ›
-          </span>
-          {group.company_name}
-        </h2>
-        <span className="text-xs text-zinc-500">
-          {seasonCount > 0 && (
-            <span className="text-indigo-600">
-              {seasonCount} {prettySeason(targetSeason)} ·{" "}
-            </span>
-          )}
-          {group.jobs.length} role{group.jobs.length === 1 ? "" : "s"}
-        </span>
-      </summary>
       <ul className="divide-y divide-zinc-100">
         {visible.map((job) => (
           <Row key={job.id} job={job} targetSeason={targetSeason} />
@@ -151,6 +138,6 @@ export default function CompanyGroup({
           </ul>
         </details>
       )}
-    </details>
+    </CompanyCard>
   );
 }
