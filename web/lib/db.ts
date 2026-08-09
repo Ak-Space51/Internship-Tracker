@@ -83,11 +83,18 @@ export async function getLastIngestAt(): Promise<string | null> {
   }
 }
 
+/** Falls back rather than throwing: the root layout awaits this, so a database
+ * blip during prerender would otherwise fail the whole build and leave the
+ * previous deployment live. */
 export async function getTargetSeason(): Promise<string> {
-  const { rows } = await pool.query(
-    "SELECT value FROM settings WHERE key = 'target_season'"
-  );
-  return rows[0]?.value ?? "summer-2027";
+  try {
+    const { rows } = await pool.query(
+      "SELECT value FROM settings WHERE key = 'target_season'"
+    );
+    return rows[0]?.value ?? "summer-2027";
+  } catch {
+    return "summer-2027";
+  }
 }
 
 function buildWhere(
