@@ -29,6 +29,11 @@ export default async function Home({
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-6">
+        <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
+          Every open {prettySeason(targetSeason)} and off-cycle internship in
+          India, Singapore, the UK and Hong Kong — collected from 100+ company
+          career boards so you don&apos;t have to check them one by one.
+        </p>
         <form action="/" method="get" className="flex gap-2">
           <input
             type="search"

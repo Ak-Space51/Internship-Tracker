@@ -23,7 +23,9 @@ async function subscribe(formData: FormData) {
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (email) DO UPDATE SET
        countries = EXCLUDED.countries, roles = EXCLUDED.roles,
-       keywords = EXCLUDED.keywords`,
+       keywords = EXCLUDED.keywords,
+       -- resubscribing through this form reverses an earlier opt-out
+       unsubscribed_at = NULL`,
     [email, countries, roles, keywords]
   );
   revalidatePath("/alerts");

@@ -53,7 +53,7 @@ def _matches(conn, sub, target_season: str) -> list[tuple]:
     ).fetchall()
 
 
-def _digest_html(jobs: list[tuple], target_season: str) -> str:
+def _digest_html(jobs: list[tuple], target_season: str, token: str | None = None) -> str:
     items = "".join(
         f'<li style="margin-bottom:12px">'
         f'<a href="{url}"><strong>{title}</strong></a><br>'
@@ -61,10 +61,19 @@ def _digest_html(jobs: list[tuple], target_season: str) -> str:
         f"</li>"
         for _, title, company, country, city, season, url in jobs
     )
+    # Every bulk email needs a working opt-out; without it this can't be shared.
+    unsubscribe = (
+        f"<p style='color:#71717a;font-size:12px'>"
+        f"<a href='{SITE_URL}/alerts/unsubscribe?token={token}'>Unsubscribe</a>"
+        f" from these alerts.</p>"
+        if token
+        else ""
+    )
     return (
         f"<h2>{len(jobs)} new internship{'s' if len(jobs) != 1 else ''} matching your alert</h2>"
         f"<ul style='list-style:none;padding:0'>{items}</ul>"
         f"<p><a href='{SITE_URL}'>Browse all internships</a></p>"
+        f"{unsubscribe}"
     )
 
 
@@ -87,20 +96,23 @@ def run_alerts(conn) -> tuple[int, int, int]:
     ).fetchone()[0]
 
     subs = conn.execute(
-        "SELECT id, email, seasons, countries, roles, keywords FROM alert_subscriptions"
+        """
+        SELECT id, email, seasons, countries, roles, keywords, unsubscribe_token
+        FROM alert_subscriptions
+        WHERE unsubscribed_at IS NULL
+        """
     ).fetchall()
+    fields = ["id", "email", "seasons", "countries", "roles", "keywords", "token"]
     sent = 0
     failed = 0
     with httpx.Client(timeout=30) as client:
         for row in subs:
-            sub = dict(
-                zip(["id", "email", "seasons", "countries", "roles", "keywords"], row)
-            )
+            sub = dict(zip(fields, row))
             jobs = _matches(conn, sub, target_season)
             if not jobs:
                 continue
             subject = f"{len(jobs)} new internship{'s' if len(jobs) != 1 else ''} for you"
-            html = _digest_html(jobs, target_season)
+            html = _digest_html(jobs, target_season, str(sub["token"]))
             if api_key:
                 try:
                     _send(client, api_key, sub["email"], subject, html)
