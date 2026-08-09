@@ -1,4 +1,13 @@
-from scraper.sources import amazon, ashby, greenhouse, lever, workday
+from scraper.sources import (
+    amazon,
+    ashby,
+    atlassian,
+    greenhouse,
+    lever,
+    microsoft,
+    smartrecruiters,
+    workday,
+)
 
 FETCHERS = {
     "greenhouse": greenhouse.fetch,
@@ -6,4 +15,7 @@ FETCHERS = {
     "lever": lever.fetch,
     "workday": workday.fetch,
     "amazon": amazon.fetch,
+    "smartrecruiters": smartrecruiters.fetch,
+    "atlassian": atlassian.fetch,
+    "microsoft": microsoft.fetch,
 }

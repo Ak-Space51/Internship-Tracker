@@ -111,16 +111,29 @@ export default function CompanyGroup({
 }) {
   const visible = group.jobs.slice(0, VISIBLE_ROWS);
   const hidden = group.jobs.slice(VISIBLE_ROWS);
+  const seasonCount = group.jobs.filter((j) => j.season === targetSeason).length;
   return (
-    <section className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
-      <header className="flex items-baseline justify-between border-b border-zinc-100 bg-zinc-50/60 px-4 py-2">
-        <h2 className="text-sm font-semibold text-zinc-900">
+    <details
+      open
+      data-company={group.company_slug}
+      className="group/co overflow-hidden rounded-lg border border-zinc-200 bg-white"
+    >
+      <summary className="flex cursor-pointer list-none items-baseline justify-between border-b border-zinc-100 bg-zinc-50/60 px-4 py-2 hover:bg-zinc-100/70">
+        <h2 className="flex items-baseline gap-2 text-sm font-semibold text-zinc-900">
+          <span className="text-zinc-400 transition-transform group-open/co:rotate-90">
+            ›
+          </span>
           {group.company_name}
         </h2>
         <span className="text-xs text-zinc-500">
+          {seasonCount > 0 && (
+            <span className="text-indigo-600">
+              {seasonCount} {prettySeason(targetSeason)} ·{" "}
+            </span>
+          )}
           {group.jobs.length} role{group.jobs.length === 1 ? "" : "s"}
         </span>
-      </header>
+      </summary>
       <ul className="divide-y divide-zinc-100">
         {visible.map((job) => (
           <Row key={job.id} job={job} targetSeason={targetSeason} />
@@ -138,6 +151,6 @@ export default function CompanyGroup({
           </ul>
         </details>
       )}
-    </section>
+    </details>
   );
 }

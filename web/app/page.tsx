@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CollapseControls from "@/components/CollapseControls";
 import CompanyGroup from "@/components/CompanyGroup";
 import FilterSidebar from "@/components/FilterSidebar";
 import { getFacets, getGroupedJobs, getTargetSeason, PAGE_SIZE } from "@/lib/db";
@@ -62,13 +63,16 @@ export default async function Home({
                 </>
               )}
             </p>
-            {(filters.q ||
-              filters.roles.length > 0 ||
-              filters.companies.length > 0) && (
-              <Link href="/" className="text-sm text-indigo-600 hover:underline">
-                Clear filters
-              </Link>
-            )}
+            <span className="flex items-center gap-3">
+              {(filters.q ||
+                filters.roles.length > 0 ||
+                filters.companies.length > 0) && (
+                <Link href="/" className="text-sm text-indigo-600 hover:underline">
+                  Clear filters
+                </Link>
+              )}
+              <CollapseControls />
+            </span>
           </div>
 
           {groups.length === 0 ? (
