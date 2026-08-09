@@ -112,6 +112,26 @@ cd web && npx next build         # typecheck + build
 ingestion stalls. `/api/health` exposes the same signal (ingest age, active job
 count, database latency) for ad-hoc checks.
 
+## Sources we deliberately do not scrape
+
+Checked 2026-08-09. **Re-check `robots.txt` before adding any of these** — this
+list exists so the investigation isn't repeated and a disallowed path isn't
+scraped by accident.
+
+| Source | Status | Evidence |
+|---|---|---|
+| Google Careers | **Excluded — disallowed** | `google.com/robots.txt`: `Disallow: /about/careers/applications/jobs/results` (plus every `?page=` variant). The search-results path is exactly what a scraper would need. |
+| D. E. Shaw | **Excluded — disallowed** | `deshaw.com/robots.txt`: `Disallow: /recruit/`, which is the careers section. |
+| TikTok / ByteDance | **Excluded — blocked** | `careers.tiktok.com` and `lifeattiktok.com` return `503` to any server-side request, including for `robots.txt` itself. |
+| Uber | Allowed, but unresolved | `jobs.uber.com/robots.txt` is `Allow: /`. Listings render client-side; the initial HTML carries only filter categories, and the results pane stays on "Loading jobs…" even in a real browser. No clean JSON API — only Next.js RSC chunks. |
+| Flipkart Careers | Untested | Serves HTML in place of `robots.txt`, so permission is ambiguous — resolve that before building anything. |
+
+Microsoft and Amazon are the large-employer India sources we *do* have, both via
+documented public endpoints (see `sources/microsoft.py`, `sources/amazon.py`).
+
 ## Deferred (V3+)
 
-Full accounts (saved jobs are currently per-browser via localStorage), application-status tracking (applied/interview/offer), bespoke scrapers for Microsoft/Goldman/DE Shaw/Flipkart-style portals (their JSON APIs need browser-side discovery), SmartRecruiters/iCIMS support, alert unsubscribe links + email confirmation.
+Full accounts (the tracker is per-browser via localStorage — export from
+`/tracker` is the only backup), fit scoring / personalised ranking,
+SmartRecruiters coverage beyond the current boards, iCIMS support, and
+double-opt-in confirmation for alert emails.
