@@ -35,7 +35,7 @@ export default async function Home({
             name="q"
             defaultValue={filters.q ?? ""}
             placeholder="Search internships, companies, cities…"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-indigo-900"
           />
           <button
             type="submit"
@@ -51,10 +51,14 @@ export default async function Home({
 
         <main>
           <div className="mb-3 flex items-baseline justify-between">
-            <p className="text-sm text-zinc-600">
-              <span className="font-semibold text-zinc-900">{totalJobs}</span>{" "}
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                {totalJobs}
+              </span>{" "}
               internship{totalJobs === 1 ? "" : "s"} at{" "}
-              <span className="font-semibold text-zinc-900">{totalCompanies}</span>{" "}
+              <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                {totalCompanies}
+              </span>{" "}
               compan{totalCompanies === 1 ? "y" : "ies"}
               {filters.q && (
                 <>
@@ -67,7 +71,10 @@ export default async function Home({
               {(filters.q ||
                 filters.roles.length > 0 ||
                 filters.companies.length > 0) && (
-                <Link href="/" className="text-sm text-indigo-600 hover:underline">
+                <Link
+                  href="/"
+                  className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
+                >
                   Clear filters
                 </Link>
               )}
@@ -76,7 +83,7 @@ export default async function Home({
           </div>
 
           {groups.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500">
+            <div className="rounded-lg border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
               No internships match these filters. Try widening the season or
               location selection.
             </div>
@@ -97,18 +104,18 @@ export default async function Home({
               {filters.page > 1 && (
                 <Link
                   href={pageHref(sp, filters.page - 1)}
-                  className="rounded border border-zinc-300 px-3 py-1.5 hover:bg-zinc-100"
+                  className="rounded border border-zinc-300 px-3 py-1.5 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
                 >
                   ← Prev
                 </Link>
               )}
-              <span className="px-2 text-zinc-500">
+              <span className="px-2 text-zinc-500 dark:text-zinc-400">
                 Page {filters.page} of {pages}
               </span>
               {filters.page < pages && (
                 <Link
                   href={pageHref(sp, filters.page + 1)}
-                  className="rounded border border-zinc-300 px-3 py-1.5 hover:bg-zinc-100"
+                  className="rounded border border-zinc-300 px-3 py-1.5 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
                 >
                   Next →
                 </Link>

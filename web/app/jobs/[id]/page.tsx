@@ -40,14 +40,14 @@ export default async function JobPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <Link href="/" className="text-sm text-indigo-600 hover:underline">
+      <Link href="/" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
         ← All internships
       </Link>
 
-      <header className="mt-4 border-b border-zinc-200 pb-6">
-        <p className="text-sm font-medium text-zinc-500">{job.company_name}</p>
-        <h1 className="mt-1 text-2xl font-bold text-zinc-900">{job.title}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-600">
+      <header className="mt-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
+        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{job.company_name}</p>
+        <h1 className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{job.title}</h1>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
           {location && <span>{location}</span>}
           {job.work_mode !== "unknown" && (
             <span className="capitalize">{job.work_mode}</span>
@@ -57,11 +57,11 @@ export default async function JobPage({
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           <SeasonBadge season={job.season} targetSeason={targetSeason} />
-          <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600">
+          <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
             {job.role_category}
           </span>
           {job.role && job.role !== job.role_category && (
-            <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600">
+            <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
               {job.role}
             </span>
           )}
@@ -79,16 +79,16 @@ export default async function JobPage({
 
       {description ? (
         <article
-          className="prose-job mt-6 text-sm leading-relaxed text-zinc-700"
+          className="prose-job mt-6 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300"
           dangerouslySetInnerHTML={{ __html: description }}
         />
       ) : (
-        <p className="mt-6 text-sm text-zinc-500">
+        <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400">
           No description available — see the full posting on the company site.
         </p>
       )}
 
-      <div className="mt-8 border-t border-zinc-200 pt-6">
+      <div className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
         <a
           href={job.application_url}
           target="_blank"

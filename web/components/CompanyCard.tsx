@@ -28,19 +28,19 @@ export default function CompanyCard({
   return (
     <section
       data-company={slug}
-      className="overflow-hidden rounded-lg border border-zinc-200 bg-white"
+      className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
     >
       <h2>
         <button
           type="button"
           onClick={() => toggleCompany(slug)}
           aria-expanded={!collapsed}
-          className="flex w-full items-baseline justify-between border-b border-zinc-100 bg-zinc-50/60 px-4 py-2 text-left hover:bg-zinc-100/70"
+          className="flex w-full items-baseline justify-between border-b border-zinc-100 bg-zinc-50/60 px-4 py-2 text-left hover:bg-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/70"
         >
-          <span className="flex items-baseline gap-2 text-sm font-semibold text-zinc-900">
+          <span className="flex items-baseline gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
             <span
               aria-hidden
-              className={`text-zinc-400 transition-transform ${
+              className={`text-zinc-400 transition-transform dark:text-zinc-500 ${
                 collapsed ? "" : "rotate-90"
               }`}
             >
@@ -48,9 +48,9 @@ export default function CompanyCard({
             </span>
             {name}
           </span>
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
             {seasonCount > 0 && (
-              <span className="text-indigo-600">
+              <span className="text-indigo-600 dark:text-indigo-400">
                 {seasonCount} {seasonLabel} ·{" "}
               </span>
             )}

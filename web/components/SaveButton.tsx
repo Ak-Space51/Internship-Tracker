@@ -39,8 +39,8 @@ export default function SaveButton({ jobId: rawId }: { jobId: number }) {
       title={saved ? "Remove from saved" : "Save internship"}
       className={`relative z-10 shrink-0 rounded-md border px-2 py-1 text-sm ${
         saved
-          ? "border-amber-300 bg-amber-50 text-amber-600"
-          : "border-zinc-200 text-zinc-400 hover:border-amber-300 hover:text-amber-500"
+          ? "border-amber-300 bg-amber-50 text-amber-600 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400"
+          : "border-zinc-200 text-zinc-400 hover:border-amber-300 hover:text-amber-500 dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-amber-700"
       }`}
     >
       {saved ? "★" : "☆"}

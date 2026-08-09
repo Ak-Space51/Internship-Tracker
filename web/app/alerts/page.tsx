@@ -33,8 +33,8 @@ export default async function AlertsPage() {
   const targetSeason = await getTargetSeason();
   return (
     <div className="mx-auto max-w-xl px-4 py-8">
-      <h1 className="text-xl font-bold text-zinc-900">Email alerts</h1>
-      <p className="mt-1 text-sm text-zinc-500">
+      <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Email alerts</h1>
+      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
         Get a digest whenever new {prettySeason(targetSeason)} or off-cycle
         internships matching your filters appear. One email per ingest run,
         only when there is something new.
@@ -42,7 +42,7 @@ export default async function AlertsPage() {
 
       <form action={subscribe} className="mt-6 space-y-5">
         <div>
-          <label className="mb-1 block text-sm font-medium text-zinc-700">
+          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Email
           </label>
           <input
@@ -50,17 +50,17 @@ export default async function AlertsPage() {
             name="email"
             required
             placeholder="you@example.com"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-indigo-900"
           />
         </div>
 
         <fieldset>
-          <legend className="mb-1 text-sm font-medium text-zinc-700">
-            Locations <span className="font-normal text-zinc-400">(none = all)</span>
+          <legend className="mb-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Locations <span className="font-normal text-zinc-400 dark:text-zinc-400">(none = all)</span>
           </legend>
           <div className="flex flex-wrap gap-3">
             {TARGET_COUNTRIES.map((c) => (
-              <label key={c} className="flex items-center gap-1.5 text-sm text-zinc-600">
+              <label key={c} className="flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
                 <input type="checkbox" name="country" value={c} className="accent-indigo-600" />
                 {c}
               </label>
@@ -69,12 +69,12 @@ export default async function AlertsPage() {
         </fieldset>
 
         <fieldset>
-          <legend className="mb-1 text-sm font-medium text-zinc-700">
-            Roles <span className="font-normal text-zinc-400">(none = all)</span>
+          <legend className="mb-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Roles <span className="font-normal text-zinc-400 dark:text-zinc-400">(none = all)</span>
           </legend>
           <div className="flex flex-wrap gap-3">
             {ROLES.map((r) => (
-              <label key={r} className="flex items-center gap-1.5 text-sm text-zinc-600">
+              <label key={r} className="flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
                 <input type="checkbox" name="role" value={r} className="accent-indigo-600" />
                 {r}
               </label>
@@ -83,9 +83,9 @@ export default async function AlertsPage() {
         </fieldset>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-zinc-700">
+          <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Keywords{" "}
-            <span className="font-normal text-zinc-400">
+            <span className="font-normal text-zinc-400 dark:text-zinc-400">
               (comma-separated, matched against titles — optional)
             </span>
           </label>
@@ -93,7 +93,7 @@ export default async function AlertsPage() {
             type="text"
             name="keywords"
             placeholder="machine learning, LLM, backend"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:ring-indigo-900"
           />
         </div>
 
@@ -103,7 +103,7 @@ export default async function AlertsPage() {
         >
           Subscribe
         </button>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-zinc-400 dark:text-zinc-400">
           Subscribing again with the same email updates your filters.
         </p>
       </form>

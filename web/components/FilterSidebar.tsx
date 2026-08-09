@@ -20,7 +20,7 @@ function FacetSection({
   if (!facets.length) return null;
   return (
     <div>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         {title}
       </h3>
       <ul className="space-y-1">
@@ -35,23 +35,25 @@ function FacetSection({
             <li key={value}>
               <Link
                 href={toggleHref(filters, dim, value)}
-                className={`flex items-center justify-between rounded px-2 py-1 text-sm hover:bg-zinc-100 ${
-                  checked ? "font-medium text-zinc-900" : "text-zinc-600"
+                className={`flex items-center justify-between rounded px-2 py-1 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
+                  checked
+                    ? "font-medium text-zinc-900 dark:text-zinc-100"
+                    : "text-zinc-600 dark:text-zinc-400"
                 }`}
               >
                 <span className="flex items-center gap-2">
                   <span
                     className={`inline-flex h-3.5 w-3.5 items-center justify-center rounded-sm border text-[10px] ${
                       checked
-                        ? "border-indigo-600 bg-indigo-600 text-white"
-                        : "border-zinc-300 bg-white"
+                        ? "border-indigo-600 bg-indigo-600 text-white dark:border-indigo-500 dark:bg-indigo-500"
+                        : "border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-800"
                     }`}
                   >
                     {checked ? "✓" : ""}
                   </span>
                   {label}
                 </span>
-                <span className="text-xs text-zinc-400">{f.count}</span>
+                <span className="text-xs text-zinc-400 dark:text-zinc-400">{f.count}</span>
               </Link>
             </li>
           );

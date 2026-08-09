@@ -39,19 +39,21 @@ export default function SavedPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-bold text-zinc-900">Saved internships</h1>
-      <p className="mt-1 text-sm text-zinc-500">
+      <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+        Saved internships
+      </h1>
+      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
         Stored in this browser — no account needed.
       </p>
 
       {jobs === null ? (
-        <p className="mt-8 text-sm text-zinc-500">Loading…</p>
+        <p className="mt-8 text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>
       ) : jobs.length === 0 ? (
-        <div className="mt-8 rounded-lg border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500">
+        <div className="mt-8 rounded-lg border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
           Nothing saved yet — hit the ☆ on any internship.
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white">
+        <ul className="mt-6 divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
           {jobs.map((job) => {
             const comp = jobComp(job);
             return (
@@ -63,17 +65,17 @@ export default function SavedPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/jobs/${job.id}`}
-                      className="text-sm font-medium text-zinc-900 hover:text-indigo-700"
+                      className="text-sm font-medium text-zinc-900 hover:text-indigo-700 dark:text-zinc-100 dark:hover:text-indigo-400"
                     >
                       {job.title}
                     </Link>
                     {!job.is_active && (
-                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
+                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:bg-red-950 dark:text-red-400">
                         CLOSED
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-zinc-500">
+                  <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
                     {[
                       job.company_name,
                       job.city && job.city !== job.country
@@ -92,7 +94,7 @@ export default function SavedPage() {
                     href={job.application_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-md border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+                    className="rounded-md border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-950"
                   >
                     Apply ↗
                   </a>
