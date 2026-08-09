@@ -5,12 +5,17 @@ declare global {
 }
 
 // Reuse the pool across dev hot-reloads.
+const connectionString =
+  process.env.DATABASE_URL ?? "postgresql://intern:intern@localhost:5432/internships";
+
 export const pool =
   globalThis._pgPool ??
   new Pool({
-    connectionString:
-      process.env.DATABASE_URL ??
-      "postgresql://intern:intern@localhost:5432/internships",
+    connectionString,
+    // Supabase requires TLS but signs with its own CA.
+    ssl: connectionString.includes("supabase")
+      ? { rejectUnauthorized: false }
+      : undefined,
     max: 10,
   });
 globalThis._pgPool = pool;
