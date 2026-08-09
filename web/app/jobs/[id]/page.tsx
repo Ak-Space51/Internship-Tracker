@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import sanitizeHtml from "sanitize-html";
 import { CompChip, SeasonBadge } from "@/components/CompanyGroup";
+import StatusSelect from "@/components/StatusSelect";
 import { getJob, getTargetSeason } from "@/lib/db";
 import { timeAgo } from "@/lib/filters";
 
@@ -67,14 +68,17 @@ export default async function JobPage({
           )}
           <CompChip job={job} />
         </div>
-        <a
-          href={job.application_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-5 inline-block rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
-          Apply now ↗
-        </a>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <a
+            href={job.application_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          >
+            Apply now ↗
+          </a>
+          <StatusSelect jobId={job.id} />
+        </div>
       </header>
 
       {description ? (

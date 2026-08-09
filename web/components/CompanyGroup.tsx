@@ -1,6 +1,7 @@
 import Link from "next/link";
 import CompanyCard from "@/components/CompanyCard";
 import SaveButton from "@/components/SaveButton";
+import StatusSelect from "@/components/StatusSelect";
 import type { CompanyGroup as Group, JobRow } from "@/lib/db";
 import { formatComp, jobComp } from "@/lib/comp";
 import { isNew, prettySeason, timeAgo } from "@/lib/filters";
@@ -99,6 +100,7 @@ function Row({ job, targetSeason }: { job: JobRow; targetSeason: string }) {
         >
           Apply ↗
         </a>
+        <StatusSelect jobId={job.id} />
         <SaveButton jobId={job.id} />
       </span>
     </li>

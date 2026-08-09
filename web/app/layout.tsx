@@ -65,8 +65,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                 internships · India · Singapore · UK · Hong Kong
               </p>
               <nav className="flex items-center gap-4 text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                <Link href="/saved" className="hover:text-indigo-600 dark:hover:text-indigo-400">
-                  ★ Saved
+                <Link href="/tracker" className="hover:text-indigo-600 dark:hover:text-indigo-400">
+                  ★ My internships
                 </Link>
                 <Link href="/alerts" className="hover:text-indigo-600 dark:hover:text-indigo-400">
                   🔔 Alerts
