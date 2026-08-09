@@ -1,11 +1,22 @@
 import type { Filters } from "./db";
 
-export const TARGET_COUNTRIES = [
+/** The regions this site is built around — what you see before touching any
+ * filter. US roles outnumber these roughly 3:1, so including them here would
+ * bury the visa-friendly listings the site exists to surface. */
+export const DEFAULT_COUNTRIES = [
   "India",
   "Singapore",
   "United Kingdom",
   "Hong Kong",
   "Remote",
+];
+
+/** Everything a user can deliberately opt into, including regions outside the
+ * default focus. Drives the alert-subscription checkboxes. */
+export const TARGET_COUNTRIES = [
+  ...DEFAULT_COUNTRIES,
+  "United States",
+  "Canada",
 ];
 
 export type SearchParams = Record<string, string | string[] | undefined>;
@@ -24,7 +35,7 @@ export function parseFilters(sp: SearchParams, targetSeason: string): Filters {
   return {
     q: typeof sp.q === "string" && sp.q.trim() ? sp.q.trim() : undefined,
     seasons: seasons.length ? seasons : [targetSeason, "off-cycle", "unknown"],
-    countries: countries.length ? countries : [...TARGET_COUNTRIES],
+    countries: countries.length ? countries : [...DEFAULT_COUNTRIES],
     roles: list(sp.role),
     companies: list(sp.company),
     page: Math.max(1, parseInt(String(sp.page ?? "1"), 10) || 1),

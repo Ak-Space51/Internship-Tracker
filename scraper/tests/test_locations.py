@@ -30,5 +30,29 @@ def test_uk_word_boundary_not_ukraine():
     assert country == "Other"
 
 
+def test_us_cities():
+    assert normalize_location("San Francisco, CA")[:2] == ("United States", "San Francisco")
+    assert normalize_location("New York, NY onsite") == ("United States", "New York", "onsite")
+    assert normalize_location("Palo Alto, CA onsite")[:2] == ("United States", "Palo Alto")
+
+
+def test_us_state_abbreviation_without_a_known_city():
+    assert normalize_location("Mentor, OH, US")[0] == "United States"
+    assert normalize_location("Austin, Texas, United States")[0] == "United States"
+
+
+def test_ambiguous_state_codes_do_not_steal_other_countries():
+    """CA is California *and* Canada; IN is Indiana *and* India. City and country
+    matching must win over the postal-abbreviation fallback."""
+    assert normalize_location("Bangalore, IN")[0] == "India"
+    assert normalize_location("Toronto, CA")[0] == "Canada"
+    assert normalize_location("Mumbai, IN")[0] == "India"
+
+
+def test_non_us_two_letter_codes_are_not_us():
+    for raw in ["Barcelona, ES Hybrid", "Milano, IT Hybrid", "Ho Chi Minh, VN"]:
+        assert normalize_location(raw)[0] != "United States", raw
+
+
 def test_unknown_location():
-    assert normalize_location("San Francisco, CA")[0] == "Other"
+    assert normalize_location("Reykjavik")[0] == "Other"
