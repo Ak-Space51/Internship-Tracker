@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getTargetSeason } from "@/lib/db";
-import { prettySeason } from "@/lib/filters";
+import { getLastIngestAt, getTargetSeason } from "@/lib/db";
+import { prettySeason, timeAgo } from "@/lib/filters";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,7 +22,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const targetSeason = await getTargetSeason();
+  const [targetSeason, lastIngestAt] = await Promise.all([
+    getTargetSeason(),
+    getLastIngestAt(),
+  ]);
   return (
     <html
       lang="en"
@@ -57,6 +60,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="border-t border-zinc-200 bg-white py-4 text-center text-xs text-zinc-400">
           Aggregated from public company career boards. Apply directly on the
           company site.
+          {lastIngestAt && (
+            <>
+              {" · "}
+              Boards last checked{" "}
+              <time dateTime={new Date(lastIngestAt).toISOString()}>
+                {timeAgo(lastIngestAt)}
+              </time>
+            </>
+          )}
         </footer>
       </body>
     </html>

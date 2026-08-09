@@ -2,7 +2,9 @@ name: Ingest internships
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # every 6 hours
+    # Every 6 hours, offset from :00 — GitHub queues scheduled jobs globally and
+    # drops top-of-hour runs first under load. Missed slots are not backfilled.
+    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 concurrency:

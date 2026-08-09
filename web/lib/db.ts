@@ -69,6 +69,20 @@ export type FacetCount = { value: string; count: number };
 
 const PAGE_SIZE = 20; // companies per page (grouped view)
 
+/** When the scraper last touched a job. Every ingest stamps last_seen_at on
+ * every job it sees, so this doubles as a pipeline-health signal: if it stops
+ * advancing, the scheduled ingest has stalled. */
+export async function getLastIngestAt(): Promise<string | null> {
+  try {
+    const { rows } = await pool.query(
+      "SELECT max(last_seen_at) AS at FROM jobs WHERE is_active"
+    );
+    return rows[0]?.at ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getTargetSeason(): Promise<string> {
   const { rows } = await pool.query(
     "SELECT value FROM settings WHERE key = 'target_season'"
