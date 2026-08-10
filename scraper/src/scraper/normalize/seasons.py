@@ -34,6 +34,16 @@ SEASON_START_MONTH = {"spring": 3, "summer": 6, "fall": 9, "winter": 12}
 _SEASON_YEAR = re.compile(rf"\b{SEASON_WORDS}\s*[,\-–—/]?\s*{YEAR}\b", re.I)
 _YEAR_SEASON = re.compile(rf"\b{YEAR}\s*[,\-–—/]?\s*{SEASON_WORDS}\b", re.I)
 _OFF_CYCLE = re.compile(r"\boff[\s\-]?cycle\b", re.I)
+# Role types that are continuous by definition rather than tied to a season:
+# German Werkstudent/Pflichtpraktikum roles run alongside term time, and Indian
+# industrial-trainee placements are rolling. Calling these "unknown" understates
+# what we know — they are off-cycle.
+_ROLLING = re.compile(
+    r"\bworking\s+student\b|\bwerkstudent\w*\b|\bstudentische[rn]?\s+aushilfe\b|"
+    r"\bmandatory\s+internship\b|\bcompulsory\s+internship\b|\bpflichtpraktikum\b|"
+    r"\bextracurricular\s+internship\b|\bindustrial\s+trainee\b",
+    re.I,
+)
 _DURATION = re.compile(r"\b(\d{1,2})\s*(?:-|–|\s)?\s*months?\b", re.I)
 _BARE_YEAR = re.compile(r"\b(20\d{2})\b")
 _GRAD_YEAR = re.compile(
@@ -87,6 +97,10 @@ def extract_season(
     # 3: off-cycle wording, or duration-only postings (India/SG style)
     if _OFF_CYCLE.search(title) or _OFF_CYCLE.search(desc[:2000]):
         return "off-cycle", "explicit", duration
+
+    # 3b: role types that are inherently continuous rather than seasonal
+    if _ROLLING.search(title) or _ROLLING.search(desc[:2000]):
+        return "off-cycle", "inferred", duration
 
     # 4: bare year in the title
     if m := _BARE_YEAR.search(title):

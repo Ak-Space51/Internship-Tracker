@@ -77,6 +77,24 @@ def test_season_word_no_year_before_season_start():
     assert extract_season("Summer Intern", today=date(2026, 2, 1))[0] == "summer-2026"
 
 
+def test_rolling_role_types_are_off_cycle_not_unknown():
+    """Werkstudent/mandatory/trainee roles run alongside term time, so they have
+    no season — but 'off-cycle' states that, where 'unknown' hides it."""
+    for title in [
+        "Working Student in Embedded Software Development",
+        "Werkstudent (m/w/d) Data Engineering",
+        "Mandatory Internship Automotive Networking",
+        "Pflichtpraktikum Softwareentwicklung",
+        "Extracurricular Internship - Master Data",
+        "Intern - Industrial Trainee",
+    ]:
+        assert season(title)[0] == "off-cycle", title
+
+
+def test_explicit_season_still_wins_over_rolling_wording():
+    assert season("Working Student, Summer 2027")[:2] == ("summer-2027", "explicit")
+
+
 def test_nothing_found():
     assert season("Software Engineer Intern") == ("unknown", "unknown", None)
 

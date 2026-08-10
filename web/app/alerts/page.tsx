@@ -1,38 +1,111 @@
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { pool, getTargetSeason } from "@/lib/db";
+import { confirmationEmail, sendEmail } from "@/lib/email";
 import { prettySeason, TARGET_COUNTRIES } from "@/lib/filters";
 
 export const dynamic = "force-dynamic";
 
 const ROLES = ["SWE", "AI/ML", "Data", "Quant", "Hardware", "Product", "Other"];
 
+/** Minutes before the same address can be sent another confirmation email.
+ * Without this, repeatedly submitting someone else's address mail-bombs them. */
+const CONFIRM_COOLDOWN_MINUTES = 15;
+
+/** Creates or updates a subscription, then emails a confirmation link. Nothing
+ * is delivered until that link is used, so signing up an address you don't own
+ * achieves nothing. */
 async function subscribe(formData: FormData) {
   "use server";
-  const email = String(formData.get("email") ?? "").trim();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-  const countries = formData.getAll("country").map(String);
-  const roles = formData.getAll("role").map(String);
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    redirect("/alerts?state=invalid");
+  }
+  // Only accept values the UI actually offers — a hand-crafted POST shouldn't
+  // be able to write arbitrary strings into the filter arrays.
+  const countries = formData
+    .getAll("country")
+    .map(String)
+    .filter((c) => TARGET_COUNTRIES.includes(c));
+  const roles = formData
+    .getAll("role")
+    .map(String)
+    .filter((r) => ROLES.includes(r));
   const keywords = String(formData.get("keywords") ?? "")
     .split(",")
-    .map((s) => s.trim())
+    .map((s) => s.trim().slice(0, 40))
     .filter(Boolean)
     .slice(0, 10);
 
-  await pool.query(
+  const { rows } = await pool.query(
     `INSERT INTO alert_subscriptions (email, countries, roles, keywords)
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (email) DO UPDATE SET
        countries = EXCLUDED.countries, roles = EXCLUDED.roles,
        keywords = EXCLUDED.keywords,
        -- resubscribing through this form reverses an earlier opt-out
-       unsubscribed_at = NULL`,
+       unsubscribed_at = NULL
+     RETURNING confirm_token, confirmed_at, confirm_sent_at`,
     [email, countries, roles, keywords]
   );
+  const sub = rows[0];
   revalidatePath("/alerts");
+
+  if (sub.confirmed_at) redirect("/alerts?state=updated");
+
+  const sentRecently =
+    sub.confirm_sent_at &&
+    Date.now() - new Date(sub.confirm_sent_at).getTime() <
+      CONFIRM_COOLDOWN_MINUTES * 60_000;
+  if (sentRecently) redirect("/alerts?state=check-email");
+
+  const siteUrl = process.env.SITE_URL ?? "https://internship-trackerf.vercel.app";
+  const confirmUrl = `${siteUrl}/alerts/confirm?token=${sub.confirm_token}`;
+  const sent = await sendEmail(
+    email,
+    "Confirm your internship alerts",
+    confirmationEmail(confirmUrl, siteUrl)
+  );
+  if (sent.ok) {
+    await pool.query(
+      "UPDATE alert_subscriptions SET confirm_sent_at = now() WHERE email = $1",
+      [email]
+    );
+    redirect("/alerts?state=check-email");
+  }
+  // Local dev has no Resend key; surface the link instead of silently
+  // confirming, so the opt-in step is never skipped by accident.
+  redirect(
+    sent.reason === "unconfigured"
+      ? `/alerts?state=no-mailer&token=${sub.confirm_token}`
+      : "/alerts?state=send-failed"
+  );
 }
 
-export default async function AlertsPage() {
-  const targetSeason = await getTargetSeason();
+const NOTICES: Record<string, { tone: "ok" | "warn"; text: string }> = {
+  "check-email": {
+    tone: "ok",
+    text: "Almost there — check your inbox and click the confirmation link. No alerts are sent until you do.",
+  },
+  updated: { tone: "ok", text: "Your alert filters have been updated." },
+  invalid: { tone: "warn", text: "That doesn't look like a valid email address." },
+  "send-failed": {
+    tone: "warn",
+    text: "We couldn't send the confirmation email just now. Try again in a few minutes.",
+  },
+};
+
+export default async function AlertsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ state?: string; token?: string }>;
+}) {
+  const [targetSeason, { state, token }] = await Promise.all([
+    getTargetSeason(),
+    searchParams,
+  ]);
+  const notice = state ? NOTICES[state] : undefined;
+
   return (
     <div className="mx-auto max-w-xl px-4 py-8">
       <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Email alerts</h1>
@@ -41,6 +114,28 @@ export default async function AlertsPage() {
         internships matching your filters appear. One email per ingest run,
         only when there is something new.
       </p>
+
+      {notice && (
+        <p
+          className={`mt-4 rounded-md px-3 py-2 text-sm ${
+            notice.tone === "ok"
+              ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300"
+              : "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+          }`}
+        >
+          {notice.text}
+        </p>
+      )}
+      {state === "no-mailer" && token && (
+        <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+          No mail service configured (RESEND_API_KEY unset), so the confirmation
+          email wasn&apos;t sent.{" "}
+          <a className="underline" href={`/alerts/confirm?token=${token}`}>
+            Open the confirmation link directly
+          </a>
+          .
+        </p>
+      )}
 
       <form action={subscribe} className="mt-6 space-y-5">
         <div>

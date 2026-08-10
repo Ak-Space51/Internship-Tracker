@@ -18,7 +18,9 @@ from pydantic import BaseModel
 
 MODEL = "claude-opus-5"
 BATCH_SIZE = 25
-DESCRIPTION_EXCERPT = 1500
+# Duration and start-date wording often sits well below the intro blurb; at 1500
+# chars we measured the classifier never seeing it on ~3% of postings.
+DESCRIPTION_EXCERPT = 4000
 
 SEASONS = [
     "summer-2026", "summer-2027", "summer-2028",
@@ -51,8 +53,12 @@ def _prompt(rows: list[tuple], today: date) -> str:
         + ", ".join(SEASONS) + ".",
         "Notes: a posting with no season label that is clearly a rolling/6-month "
         "placement (common in India and Singapore) is `off-cycle`. A summer "
-        "internship posted now with no year stated is for the NEXT summer. Use "
-        "`unknown` only when there is genuinely no signal.",
+        "internship posted now with no year stated is for the NEXT summer. "
+        "Roles that run alongside term time rather than in a fixed window — "
+        "working-student/Werkstudent posts, mandatory or extracurricular "
+        "university placements, industrial traineeships — are `off-cycle`, not "
+        "`unknown`. Use `unknown` only when there is genuinely no signal; do "
+        "not guess a season from the company or team alone.",
         "",
         "For `role_category`, one of: " + ", ".join(ROLE_CATEGORIES) + ".",
         "For `role`, a short specialization like 'Backend', 'Machine Learning', "

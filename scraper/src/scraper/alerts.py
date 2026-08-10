@@ -100,6 +100,8 @@ def run_alerts(conn) -> tuple[int, int, int]:
         SELECT id, email, seasons, countries, roles, keywords, unsubscribe_token
         FROM alert_subscriptions
         WHERE unsubscribed_at IS NULL
+          -- double opt-in: never mail an address whose owner hasn't confirmed
+          AND confirmed_at IS NOT NULL
         """
     ).fetchall()
     fields = ["id", "email", "seasons", "countries", "roles", "keywords", "token"]

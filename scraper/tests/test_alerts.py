@@ -122,6 +122,15 @@ def test_unsubscribed_subscribers_are_excluded_in_sql():
     assert "unsubscribed_at IS NULL" in sub_query
 
 
+def test_unconfirmed_subscribers_are_excluded_in_sql():
+    """Double opt-in: an address nobody confirmed must never receive mail, or
+    the form becomes a way to sign up third parties."""
+    conn = FakeConnection()
+    alerts.run_alerts(conn)
+    sub_query = next(s for s in conn.sql_seen if "FROM alert_subscriptions" in s)
+    assert "confirmed_at IS NOT NULL" in sub_query
+
+
 def test_digest_carries_a_working_unsubscribe_link(monkeypatch):
     monkeypatch.setattr(alerts, "SITE_URL", "https://example.com")
     html = alerts._digest_html([JOB], "summer-2027", TOKEN)
