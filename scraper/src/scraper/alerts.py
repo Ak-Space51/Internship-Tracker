@@ -14,7 +14,7 @@ import httpx
 
 TARGET_COUNTRIES = ["India", "Singapore", "United Kingdom", "Hong Kong", "Remote"]
 # `or` fallback: in GitHub Actions an unset var/secret expands to "" rather than unset
-FROM_ADDRESS = os.environ.get("ALERTS_FROM") or "TrackInternships <alerts@resend.dev>"
+FROM_ADDRESS = os.environ.get("ALERTS_FROM") or "TrackInternships <updates@mail.vigilonset.me>"
 SITE_URL = os.environ.get("SITE_URL") or "http://localhost:3000"
 
 
